@@ -7,7 +7,6 @@ import com.dayone.service.CompanyService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.CacheManager;
-import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -15,7 +14,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 
 @Slf4j
 @RestController
@@ -24,7 +22,7 @@ import java.util.List;
 public class CompanyController {
 
     private final CompanyService companyService;
-    //private final CacheManager redisCacheManager;
+    private final CacheManager redisCacheManager;
 
 
     @GetMapping("/autocomplete")
@@ -54,16 +52,16 @@ public class CompanyController {
         return ResponseEntity.ok(company);
     }
 
-    /*@DeleteMapping("/{ticker}")
-    //@PreAuthorize("hasRole('WRITE')")
+    @DeleteMapping("/{ticker}")
+    @PreAuthorize("hasRole('WRITE')")
     public ResponseEntity<?> deleteCompany(@PathVariable String ticker) {
         String companyName = this.companyService.deleteCompany(ticker);
         this.clearFinanceCache(companyName);
         return ResponseEntity.ok(companyName);
-    }*/
+    }
 
-    /*public void clearFinanceCache(String companyName) {
+    public void clearFinanceCache(String companyName) {
         this.redisCacheManager.getCache(CacheKey.KEY_FINANCE).evict(companyName);
-    }*/
+    }
 
 }

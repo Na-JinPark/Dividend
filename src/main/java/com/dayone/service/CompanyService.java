@@ -1,5 +1,6 @@
 package com.dayone.service;
 
+import com.dayone.exception.impl.NoCompanyException;
 import com.dayone.model.Company;
 import com.dayone.model.ScrapedResult;
 import com.dayone.persist.CompanyRepository;
@@ -8,10 +9,9 @@ import com.dayone.persist.entity.CompanyEntity;
 import com.dayone.persist.entity.DividendEntity;
 import com.dayone.scraper.Scraper;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.Trie;
-import org.hibernate.cfg.NotYetImplementedException;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
@@ -19,7 +19,7 @@ import org.springframework.util.ObjectUtils;
 import java.util.List;
 import java.util.stream.Collectors;
 
-//@Slf4j
+@Slf4j
 @Service
 @AllArgsConstructor
 public class CompanyService {
@@ -57,15 +57,6 @@ public class CompanyService {
         this.dividendRepository.saveAll(dividendEntityList);
         return company;
     }
-/*
-    public List<String> getCompanyNamesByKeyword(String keyword) {
-        Pageable limit = PageRequest.of(0,10);
-        Page<CompanyEntity> companyEntities = this.companyRepository.findByNameStartingWithIgnoreCase(keyword,limit);
-        return companyEntities.stream()
-                .map(e -> e.getName())
-                .collect(Collectors.toList());
-    }
-*/
     public void addAutocompleteKeyword(String keyword) {
         this.trie.put(keyword, null);
     }
@@ -81,10 +72,16 @@ public class CompanyService {
         this.trie.remove(keyword);
     }
 
-    /*public String deleteCompany(String ticker) {
+    public String deleteCompany(String ticker) {
+        var company = this.companyRepository.findByTicker(ticker)
+                                            .orElseThrow(() -> new NoCompanyException());
         // 1. 배당금 정보 삭제
+        this.dividendRepository.deleteAllByCompanyId(company.getId());
         // 2. 회사 정보 삭제
-        throw new NotYetImplementedException();
+        this.companyRepository.delete(company);
+
+        this.deleteAutocompleteKeyword(company.getName());
+        return company.getName();
     }
-*/
+
 }
